@@ -9,10 +9,9 @@ import re
 
 #check path for datasheet
 
-df = pd.read_csv("D:\Escritorio\IPVA 2026.csv",encoding = "ISO-8859-1", sep = ';')
+df = pd.read_csv("/Users/eduardoscarlatelli/Documents/DespachanteMiranda/IPVA 2026.csv",encoding = "ISO-8859-1", sep = ';')
 
 #drops the 'Placa' column empty values, as you can't know when the client will need to be notified
-
 df = df.dropna(subset=['Placa'])
 
 #drop some content that isnt relevant in my case
@@ -23,7 +22,6 @@ mask = ~df['Nome'].isin(special_values)
 #create a copy to avoid Pandas indexing errors
 df_filtered = df[mask].copy()
 
-
 #fills the empty nan columns in 'TelRes' and 'Fax ou Cel' with empty strings to simplify conversion next
 df_filtered[['TelRes', 'Fax ou Cel']] = df_filtered[['TelRes', 'Fax ou Cel']].fillna('')
 
@@ -31,6 +29,11 @@ df_filtered[['TelRes', 'Fax ou Cel']] = df_filtered[['TelRes', 'Fax ou Cel']].fi
 df_filtered['TelRes'] = df_filtered['TelRes'].apply(lambda x: re.sub(r'[()-]', '', str(x)))
 df_filtered['Fax ou Cel'] = df_filtered['Fax ou Cel'].apply(lambda x: re.sub(r'[()-]', '', str(x)))
 
+#drops repeated rows, with no paramater, because the same name can have different cars and the same plate can have different owners
+df_final = df_filtered.drop_duplicates(keep='last')
+
 #saves the final result in a excel file
-df_filtered = df_filtered.fillna('')
-df_filtered.to_csv('D:\Escritorio\IPVA_2026_filtered.csv', index=False, sep=';', encoding='ISO-8859-1')
+df_final = df_final.fillna('')
+print(len(df_filtered))
+print(len(df_final))
+df_final.to_csv('/Users/eduardoscarlatelli/Documents/DespachanteMiranda/IPVA_2026_filtered.csv', index=False, sep=';', encoding='ISO-8859-1')
