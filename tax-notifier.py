@@ -93,19 +93,26 @@ def result_datasheet():
     #lists of greetings and connectors to make the message seem more humane and not bot-like
     greetings = ['Ola', 'Oi', 'E ai']
     connectors = ["aqui e o", "e o","sou o"]
+    
+    #creating variables for error checking and taking out the year that is hardcoded
+    error_detection = 0
+    current_year = datetime.now().year
+    tax_free = current_year - 15
 
     for index, row in df.iterrows():
-        #checks if the model year of the car is lower than 2010, if it is the car doesnt pay taxes
-        if row.iloc[3] <= 2010:
+        #checks if the model year of the car is 15 years old or greater, if it is the car doesnt pay taxes
+        if row.iloc[3] < tax_free:
             df.at[index, 'Status'] = 'Isento'
             continue
         
         #the program is run a number of times so Meta doesnt block the number, so if the column Status is empty, thats where it has to begin from
         if row['Status'] != '':
             continue
+        
         #breaks the loop if it reaches the daily load
         if sent_today >= MAX_DAILY_LOAD:
             break
+        
         #makes the greeting and connector random
         greeting = random.choice(greetings)
         connector = random.choice(connectors)
@@ -145,7 +152,6 @@ def result_datasheet():
                     sent, timestamp = send_message(f"{ddd}{tel_res}", message)
                     if sent:
                         break
-
         if sent:
             #if the message is sent we put the Sent label in the Status column and the time it was sent in the Timestamp (Horario) column
             dt_brasilia = datetime.fromtimestamp(timestamp, tz=pytz.timezone('America/Sao_Paulo'))
@@ -154,17 +160,30 @@ def result_datasheet():
             df.at[index,'Status'] = 'Enviado'
             df.at[index,'Horario'] = formatted_datetime
             sent_today+=1
+            error_detection = 0
 
         else:
             #if the message is not sent we put the invalid number label in the status column so the client knows that this number wasnt notified
             df.at[index,'Status'] = 'Numero Invalido'
             invalid+=1
+            error_detection+=1
         #puts a timer at every 65 numbers so that Meta wont see as a spamming bot
         if sent_today > 0 and sent_today % 65 == 0:
             time.sleep(300)
 
         #a timer between every message so Meta wont see it as a spamming bot
         time.sleep(random.randint(30,40))
+        
+        #if the API disconnects it will see every number as invalid, so we add this check so the program ends
+        if error_detection >= 10:
+            print("API desconectada")
+            #creates a variable to check what is most likely the first occurrence after the API disconnects
+            false_invalid = index - 10
+            #erases all the "wrong" invalids, so it tries again the next time it runs
+            for i in range(false_invalid + 1, index + 1):
+                df.at[i, 'Status'] = ''
+
+            break
     
     #at the end of the loop sends a report to the administrator so it knows how the program ran
     admin_message = f"REPORT:\nEnviados hoje: {sent_today};\nInvalidos: {invalid};\nRestantes:{total - (total_sent + sent_today + invalid)}"
