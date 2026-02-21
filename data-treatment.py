@@ -30,10 +30,8 @@ df_filtered['TelRes'] = df_filtered['TelRes'].apply(lambda x: re.sub(r'[()-]', '
 df_filtered['Fax ou Cel'] = df_filtered['Fax ou Cel'].apply(lambda x: re.sub(r'[()-]', '', str(x)))
 
 #drops repeated rows, with no paramater, because the same name can have different cars and the same plate can have different owners
-df_final = df_filtered.drop_duplicates(keep='last')
+df_filtered = df_filtered.drop_duplicates(keep='last')
 
 #saves the final result in a excel file
-df_final = df_final.fillna('')
-print(len(df_filtered))
-print(len(df_final))
-df_final.to_csv('/Users/eduardoscarlatelli/Documents/DespachanteMiranda/IPVA_2026_filtered.csv', index=False, sep=';', encoding='ISO-8859-1')
+df_filtered = df_filtered.fillna('')
+df_filtered.to_csv('/Users/eduardoscarlatelli/Documents/DespachanteMiranda/IPVA_2026_filtered.csv', index=False, sep=';', encoding='ISO-8859-1')
